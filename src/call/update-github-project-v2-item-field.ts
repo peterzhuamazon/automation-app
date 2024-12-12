@@ -10,10 +10,11 @@
 // Name         : addIssueToGitHubProjectV2
 // Description  : add issue to github project v2 based on labels
 // Arguments    :
-//   - labels   : (array) label name, add any of the listed labels on an issue will add the issue to project listed in `projects` arg
-//   - project  : (string) the `<Organization Name>/<Project Number> for the issues to be added to.
+//   - itemId   : (string) the item Node Id when it gets added to a project.
+//   - method   : (string) the method to update an item field in a given project, the item must have been already added to a project.
+//              : label: Adding `Roadmap:Releases/Project Health` label will update the `Roadmap` field value of an item to `Releases, Project Health`.
+//   - project  : (string) the `<Organization Name>/<Project Number> where the item field belongs to.
 //              : Ex: `opensearch-project/206` which is the OpenSearch Roadmap Project
-// Return       : (string) `Item Node Id` or `null`
 // Requirements : ADDITIONAL_RESOURCE_CONTEXT=true
 
 import { randomBytes } from 'crypto';
@@ -21,17 +22,18 @@ import { Probot } from 'probot';
 import { Resource } from '../service/resource/resource';
 import { validateResourceConfig } from '../utility/verification/verify-resource';
 
-export interface AddIssueToGitHubProjectV2Params {
-  labels: string[];
+export interface UpdateGithubProjectV2ItemFieldParams {
+  itemId: string;
+  method: string;
   project: string;
 }
 
 export async function validateProject(app: Probot, resource: Resource, project: string): Promise<Boolean> {
   const projOrg = project.split('/')[0];
   const projNum = Number(project.split('/')[1]);
-  const projRes = resource.organizations.get(projOrg)?.projects.get(projNum);
+  const projRed = resource.organizations.get(projOrg)?.projects.get(projNum);
 
-  if (!projRes) {
+  if (!projRed) {
     app.log.error(`Project ${projNum} in organization ${projOrg} is not defined in resource config!`);
     return false;
   }
@@ -39,11 +41,11 @@ export async function validateProject(app: Probot, resource: Resource, project: 
   return true;
 }
 
-export default async function addIssueToGitHubProjectV2(
+export default async function UpdateGithubProjectV2ItemField(
   app: Probot,
   context: any,
   resource: Resource,
-  { labels, project }: AddIssueToGitHubProjectV2Params,
+  { itemId, method, project }: UpdateGithubProjectV2ItemFieldParams,
 ): Promise<string | null> {
   if (!(await validateResourceConfig(app, context, resource))) return null;
   if (!(await validateProject(app, resource, project))) return null;
@@ -54,10 +56,9 @@ export default async function addIssueToGitHubProjectV2(
     return null;
   }
 
-  // Verify triggered label
-  const label = context.payload.label.name.trim();
-  if (!labels.includes(label)) {
-    app.log.info(`"${label}" is not defined in call paramter "labels": ${labels}.`);
+  // Verify itemId present
+  if (!itemId) {
+    app.log.error('No Item Node Id provided in parameter.');
     return null;
   }
 
@@ -65,7 +66,6 @@ export default async function addIssueToGitHubProjectV2(
   const repoName = context.payload.repository.name;
   const issueNumber = context.payload.issue.number;
   const issueNodeId = context.payload.issue.node_id;
-  let itemNodeId = null;
 
   // Add to project
   try {
@@ -75,24 +75,28 @@ export default async function addIssueToGitHubProjectV2(
     const projectNodeId = resource.organizations.get(projectSplit[0])?.projects.get(Number(projectSplit[1]))?.nodeId;
     const addToProjectMutation = `
           mutation {
-            addProjectV2ItemById(input: {
-              clientMutationId: "${mutationId}",
-              contentId: "${issueNodeId}",
-              projectId: "${projectNodeId}",
-            }) {
-              item {
-                id
+            updateProjectV2ItemFieldValue(
+              input: {
+                projectId: "${projectNodeId}",
+                itemId: "${itemId}",
+                fieldId: "${fieldNodeId}",
+                value: {
+                  singleSelectOptionId: "${optionId}"
+                }
+              }
+            ) {
+                projectV2Item {
+                  id
+                }
               }
             }
-          }
-        `;
+          `;
     const responseAddToProject = await context.octokit.graphql(addToProjectMutation);
     app.log.info(responseAddToProject);
-    itemNodeId = responseAddToProject.addProjectV2ItemById.item.id;
   } catch (e) {
     app.log.error(`ERROR: ${e}`);
     return null;
   }
 
-  return itemNodeId;
+  return;
 }
