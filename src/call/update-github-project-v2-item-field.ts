@@ -18,7 +18,7 @@
 //              : Ex: `opensearch-project/206` which is the OpenSearch Roadmap Project
 // Requirements : ADDITIONAL_RESOURCE_CONTEXT=true
 
-// import { randomBytes } from 'crypto';
+import { randomBytes } from 'crypto';
 import { Probot } from 'probot';
 import { Resource } from '../service/resource/resource';
 import { validateResourceConfig } from '../utility/verification/verify-resource';
@@ -63,43 +63,58 @@ export default async function UpdateGithubProjectV2ItemField(
     return null;
   }
 
-  app.log.info(`Start updating fields for project item "${itemId}" ...`)
+  // Verify update method
+  if (method != 'label') {
+    app.log.error("Only 'label' method is supported in this call at the moment.");
+    return null;
+  }
 
-  //const orgName = context.payload.organization.login;
-  //const repoName = context.payload.repository.name;
-  //const issueNumber = context.payload.issue.number;
-  // const issueNodeId = context.payload.issue.node_id;
-
-  // Add to project
-  //try {
-  //  app.log.info(`Attempt to add ${orgName}/${repoName}/${issueNumber} to project ${project}`);
-  //  const mutationId = await randomBytes(20).toString('hex');
-  //  const projectSplit = project.split('/');
-  //  const projectNodeId = resource.organizations.get(projectSplit[0])?.projects.get(Number(projectSplit[1]))?.nodeId;
-  //  const addToProjectMutation = `
-  //        mutation {
-  //          updateProjectV2ItemFieldValue(
-  //            input: {
-  //              projectId: "${projectNodeId}",
-  //              itemId: "${itemId}",
-  //              fieldId: "${fieldNodeId}",
-  //              value: {
-  //                singleSelectOptionId: "${optionId}"
-  //              }
-  //            }
-  //          ) {
-  //              projectV2Item {
-  //                id
-  //              }
-  //            }
-  //          }
-  //        `;
-  //  const responseAddToProject = await context.octokit.graphql(addToProjectMutation);
-  //  app.log.info(responseAddToProject);
-  //} catch (e) {
-  //  app.log.error(`ERROR: ${e}`);
-  //  return null;
-  //}
+  // Update item field
+  try {
+    app.log.info(`Attempt to update field for item "${itemId}" in project ${project} ...`);
+    const mutationId = await randomBytes(20).toString('hex');
+    const projectSplit = project.split('/');
+    const projectNode = resource.organizations.get(projectSplit[0])?.projects.get(Number(projectSplit[1]));
+    const labelName = context.payload.label.name;
+    const labelSplit = labelName.split(':');
+    const fieldNode = projectNode?.fields.get(labelSplit[0]);
+    let fieldOptionMatch = 0;
+    if (fieldNode?.fieldType == 'SINGLE_SELECT') {
+      for (const fieldOption of fieldNode?.context.options) {
+        if (fieldOption.name == labelSplit[1]) {
+          fieldOptionMatch += 1;
+          const updateItemFieldMutation = `
+              mutation {
+                updateProjectV2ItemFieldValue(
+                  input: {
+                    clientMutationId: "${mutationId}",
+                    projectId: "${projectNode?.nodeId}",
+                    itemId: "${itemId}",
+                    fieldId: "${fieldNode?.nodeId}",
+                    value: {
+                      singleSelectOptionId: "${fieldOption.id}"
+                    }
+                  }
+                ) {
+                    projectV2Item {
+                      id
+                    }
+                  }
+                }
+              `;
+          const responseUpdateItemField = await context.octokit.graphql(updateItemFieldMutation);
+          app.log.info(responseUpdateItemField);
+          break;
+        }
+      }
+    }
+    if (fieldOptionMatch == 0) {
+      app.log.info(`No match found for ${labelName} in project ${project}`)
+    }
+  } catch (e) {
+    app.log.error(`ERROR: ${e}`);
+    return null;
+  }
 
   return null;
 }

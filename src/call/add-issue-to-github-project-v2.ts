@@ -57,7 +57,7 @@ export default async function addIssueToGitHubProjectV2(
   // Verify triggered label
   const label = context.payload.label.name.trim();
   if (!labels.includes(label)) {
-    app.log.info(`"${label}" is not defined in call paramter "labels": ${labels}.`);
+    app.log.error(`"${label}" is not defined in call paramter "labels": ${labels}.`);
     return null;
   }
 
