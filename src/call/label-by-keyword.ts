@@ -14,8 +14,7 @@
 //   - keywordIgnoreCase : (string) whether or not to ignore cases in keyword matching, default is 'true'
 //   - label             : (string) the name of the label already created in corresponding repository
 
-import { Probot } from 'probot';
-import { ProbotOctokit } from 'probot';
+import { Probot, ProbotOctokit } from 'probot';
 import { Resource } from '../service/resource/resource';
 import { validateResourceConfig } from '../utility/verification/verify-resource';
 
@@ -45,9 +44,9 @@ export default async function labelByKeyword(
 
   const owner = context.payload.repository.owner.login;
   const repo = context.payload.repository.name;
-  const issue_number = context.payload.issue?.number ?? context.payload.pull_request.number;
+  const issue_number = context.payload.issue?.number ?? context.payload.pull_request.number; // eslint-disable-line
 
-  for (const text of [title, body]) {
+  [title, body].forEach(async (text) => {
     const textProcess = keywordIgnoreCase === 'true' ? text.toLowerCase() : text;
     const keywordProcess = keywordIgnoreCase === 'true' ? keyword.toLowerCase() : keyword;
 
@@ -56,14 +55,14 @@ export default async function labelByKeyword(
       app.log.info(`Updating issue: ${owner}/${repo}/${issue_number}`);
       try {
         await octokit.rest.issues.addLabels({
-          owner: owner,
-          repo: repo,
-          issue_number: issue_number,
+          owner,
+          repo,
+          issue_number,
           labels: [`${label}`],
         });
       } catch (e) {
         app.log.error(`ERROR: ${e}`);
       }
     }
-  }
+  });
 }

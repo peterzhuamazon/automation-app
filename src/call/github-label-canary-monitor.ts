@@ -15,8 +15,7 @@
 //   - value: (string) The value of the CloudWatch Metric you want to send.
 //   - unit: (string) The unit of the CloudWatch Metric you want to send.
 
-import { Probot } from 'probot';
-import { ProbotOctokit } from 'probot';
+import { Probot, ProbotOctokit } from 'probot';
 import { CloudWatchClient, PutMetricDataCommand, StandardUnit } from '@aws-sdk/client-cloudwatch';
 import { Resource } from '../service/resource/resource';
 
@@ -32,7 +31,9 @@ export default async function githubLabelCanaryMonitor(
   context: any,
   octokit: ProbotOctokit,
   resource: Resource,
-  { nameSpace, metricName, value, unit }: LabelCanaryMonitorParams,
+  {
+    nameSpace, metricName, value, unit,
+  }: LabelCanaryMonitorParams,
 ): Promise<void> {
   // Removed validateResourceConfig to let this function listen on all repos, and filter for only the repos that are public.
   // This is done so when a new repo is made public, this app can automatically start processing its events.
@@ -65,7 +66,7 @@ export default async function githubLabelCanaryMonitor(
           app.log.error(`Error Publishing CloudWatch metric for monitoring : ${error}`);
         }
       }
-      return; // In the future, add `exit` right here to prevent subsequent tasks from running
+      // In the future, add `exit` right here to prevent subsequent tasks from running
     }
   }
 }

@@ -13,8 +13,7 @@
 //   - text     : (string) the text string to be written in comment
 //   - tagUser  : (string) tag a specific user before the text
 
-import { Probot } from 'probot';
-import { ProbotOctokit } from 'probot';
+import { Probot, ProbotOctokit } from 'probot';
 import dedent from 'dedent';
 import { Resource } from '../service/resource/resource';
 import { validateResourceConfig } from '../utility/verification/verify-resource';

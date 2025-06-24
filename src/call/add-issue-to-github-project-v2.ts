@@ -17,8 +17,7 @@
 // Requirements : ADDITIONAL_RESOURCE_CONTEXT=true
 
 import { randomBytes } from 'crypto';
-import { Probot } from 'probot';
-import { ProbotOctokit } from 'probot';
+import { Probot, ProbotOctokit } from 'probot';
 import { Resource } from '../service/resource/resource';
 import { validateResourceConfig } from '../utility/verification/verify-resource';
 

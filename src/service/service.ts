@@ -7,8 +7,7 @@
  * compatible open source license.
  */
 
-import { Probot } from 'probot';
-import { ProbotOctokit } from 'probot';
+import { Probot, ProbotOctokit } from 'probot';
 import type { WebhookEventMap } from '@octokit/webhooks-types';
 import { access, realpath } from 'fs/promises';
 import { Resource } from './resource/resource';

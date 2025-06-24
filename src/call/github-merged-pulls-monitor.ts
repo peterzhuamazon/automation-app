@@ -10,8 +10,7 @@
 // Name         : githubMergedPullsMonitor
 // Description  : Monitors the CI workflows of merged pull requests, providing metrics that give an overview of whether pull requests were merged without passing CI checks.
 
-import { Probot } from 'probot';
-import { ProbotOctokit } from 'probot';
+import { Probot, ProbotOctokit } from 'probot';
 import { Resource } from '../service/resource/resource';
 import { OpensearchClient } from '../utility/opensearch/opensearch-client';
 import { validateResourceConfig } from '../utility/verification/verify-resource';
