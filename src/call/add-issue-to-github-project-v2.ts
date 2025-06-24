@@ -18,6 +18,7 @@
 
 import { randomBytes } from 'crypto';
 import { Probot } from 'probot';
+import { ProbotOctokit } from 'probot';
 import { Resource } from '../service/resource/resource';
 import { validateResourceConfig } from '../utility/verification/verify-resource';
 
@@ -42,6 +43,7 @@ export async function validateProject(app: Probot, resource: Resource, project: 
 export default async function addIssueToGitHubProjectV2(
   app: Probot,
   context: any,
+  octokit: ProbotOctokit,
   resource: Resource,
   { labels, project }: AddIssueToGitHubProjectV2Params,
 ): Promise<string | null> {

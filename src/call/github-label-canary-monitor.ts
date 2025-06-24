@@ -16,6 +16,7 @@
 //   - unit: (string) The unit of the CloudWatch Metric you want to send.
 
 import { Probot } from 'probot';
+import { ProbotOctokit } from 'probot';
 import { CloudWatchClient, PutMetricDataCommand, StandardUnit } from '@aws-sdk/client-cloudwatch';
 import { Resource } from '../service/resource/resource';
 
@@ -29,6 +30,7 @@ export interface LabelCanaryMonitorParams {
 export default async function githubLabelCanaryMonitor(
   app: Probot,
   context: any,
+  octokit: ProbotOctokit,
   resource: Resource,
   { nameSpace, metricName, value, unit }: LabelCanaryMonitorParams,
 ): Promise<void> {

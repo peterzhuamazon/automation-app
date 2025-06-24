@@ -11,9 +11,10 @@
 // Description  : Stores GitHub Events in an S3 Bucket
 
 import { Probot } from 'probot';
+import { ProbotOctokit } from 'probot';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 
-export default async function githubEventsToS3(app: Probot, context: any): Promise<void> {
+export default async function githubEventsToS3(app: Probot, context: any, octokit: ProbotOctokit): Promise<void> {
   // Removed validateResourceConfig to let this function listen on all repos, and filter for only the repos that are public.
   // This is done so when a new repo is made public, this app can automatically start processing its events.
   //

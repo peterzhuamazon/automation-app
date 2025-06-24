@@ -11,11 +11,12 @@
 // Description  : Indexes events pertaining to user activity to OpenSearch
 
 import { Probot } from 'probot';
+import { ProbotOctokit } from 'probot';
 import { Resource } from '../service/resource/resource';
 import { validateResourceConfig } from '../utility/verification/verify-resource';
 import { OpensearchClient } from '../utility/opensearch/opensearch-client';
 
-export default async function githubActivityEventsMonitor(app: Probot, context: any, resource: Resource): Promise<void> {
+export default async function githubActivityEventsMonitor(app: Probot, context: any, octokit: ProbotOctokit, resource: Resource): Promise<void> {
   if (!(await validateResourceConfig(app, context, resource))) return;
 
   const repoName = context.payload.repository?.name;

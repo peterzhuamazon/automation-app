@@ -8,6 +8,7 @@
  */
 
 import { Probot } from 'probot';
+import { ProbotOctokit } from 'probot';
 import type { WebhookEventMap } from '@octokit/webhooks-types';
 import { access, realpath } from 'fs/promises';
 import { Resource } from './resource/resource';
@@ -26,6 +27,8 @@ export class Service {
   private _operation: Operation;
 
   private _app: Probot;
+
+  private _octokit: ProbotOctokit;
 
   // Map<eventName, Map<taskName, returnValue>>
   private _outputs: Map<string, Map<string, any>>;
@@ -52,12 +55,16 @@ export class Service {
     return this._app;
   }
 
+  private get octokit(): ProbotOctokit {
+    return this._octokit;
+  }
+
   public async initService(app: Probot, resourceConfigPath: string, operationConfigPath: string, additionalResourceContext: boolean): Promise<void> {
     app.log.info(`Initializing Service: ${this.name} `);
     this._app = app;
     // Get octokit client so Resource object will get context
-    const octokit = await octokitAuth(this.app, Number(process.env.INSTALLATION_ID));
-    const resConfigObj = new ResourceConfig(octokit, resourceConfigPath, additionalResourceContext);
+    this._octokit = await octokitAuth(this.app, Number(process.env.INSTALLATION_ID));
+    const resConfigObj = new ResourceConfig(this.octokit, resourceConfigPath, additionalResourceContext);
     this._resource = await resConfigObj.initResource();
     const opConfigObj = new OperationConfig(operationConfigPath);
     this._operation = await opConfigObj.initOperation();
@@ -85,7 +92,7 @@ export class Service {
 
       if (callFunc === 'default') {
         console.log(`[${event}]: Call default function: [${callStack.default.name}]`);
-        const resultDefault = await callStack.default(this.app, context, this.resource, { ...callArgsSub });
+        const resultDefault = await callStack.default(this.app, context, this.octokit, this.resource, { ...callArgsSub });
         this._outputs.get(event)?.set(name, resultDefault);
         console.log(this._outputs.get(event));
       } else {
@@ -95,7 +102,7 @@ export class Service {
         if (!(typeof callFuncCustom === 'function')) {
           throw new Error(`[${event}]: ${callFuncCustom} is not a function, please verify in ${callPath}`);
         }
-        this._outputs.get(event)?.set(name, await callFuncCustom(this.app, context, this.resource, { ...callArgsSub }));
+        this._outputs.get(event)?.set(name, await callFuncCustom(this.app, context, this.octokit, this.resource, { ...callArgsSub }));
       }
     }, Promise.resolve());
   }

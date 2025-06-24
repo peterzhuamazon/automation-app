@@ -13,6 +13,7 @@
 //  - events     : The list of events to monitor and index, from https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/events-that-trigger-workflows.
 
 import { Probot } from 'probot';
+import { ProbotOctokit } from 'probot';
 import { CloudWatchClient, PutMetricDataCommand } from '@aws-sdk/client-cloudwatch';
 import { Resource } from '../service/resource/resource';
 import { OpensearchClient } from '../utility/opensearch/opensearch-client';
@@ -26,6 +27,7 @@ interface WorkflowRunMonitorArgs {
 export default async function githubWorkflowRunsMonitor(
   app: Probot,
   context: any,
+  octokit: ProbotOctokit,
   resource: Resource,
   { events, workflows }: WorkflowRunMonitorArgs,
 ): Promise<void> {
