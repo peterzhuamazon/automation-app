@@ -83,7 +83,7 @@ describe('addIssueToGitHubProjectV2Functions', () => {
     it('should print error and return null if it is not a issues.labeled event', async () => {
       context.payload.label = undefined;
 
-      const result = await addIssueToGitHubProjectV2(app, context, resource, params);
+      const result = await addIssueToGitHubProjectV2(app, context, context.octokit, resource, params);
 
       expect(app.log.error).toHaveBeenCalledWith("Only 'issues.labeled' event is supported on this call.");
       expect(result).toBe(null);
@@ -92,7 +92,7 @@ describe('addIssueToGitHubProjectV2Functions', () => {
     it('should print error if context label does not match the ones in resource config', async () => {
       context.payload.label.name = 'enhancement';
 
-      const result = await addIssueToGitHubProjectV2(app, context, resource, params);
+      const result = await addIssueToGitHubProjectV2(app, context, context.octokit, resource, params);
 
       expect(app.log.error).toHaveBeenCalledWith('"enhancement" is not defined in call paramter "labels": Meta,RFC.');
       expect(result).toBe(null);
@@ -106,7 +106,7 @@ describe('addIssueToGitHubProjectV2Functions', () => {
 
       context.octokit.graphql.mockResolvedValue(graphQLResponse);
 
-      const result = await addIssueToGitHubProjectV2(app, context, resource, params);
+      const result = await addIssueToGitHubProjectV2(app, context, context.octokit, resource, params);
 
       /* prettier-ignore-start */
       const graphQLCallStack = `
@@ -132,7 +132,7 @@ describe('addIssueToGitHubProjectV2Functions', () => {
     it('should print log error when GraphQL call fails', async () => {
       context.octokit.graphql.mockRejectedValue(new Error('GraphQL request failed'));
 
-      const result = await addIssueToGitHubProjectV2(app, context, resource, params);
+      const result = await addIssueToGitHubProjectV2(app, context, context.octokit, resource, params);
 
       expect(context.octokit.graphql).rejects.toThrow('GraphQL request failed');
       expect(context.octokit.graphql).toHaveBeenCalled();

@@ -39,6 +39,9 @@ export default async function labelByKeyword(
     return;
   }
 
+  console.log(app)
+  console.log(context)
+
   const title = context.payload.issue?.title ?? context.payload.pull_request.title;
   const body = context.payload.issue?.body ?? context.payload.pull_request.body;
 
@@ -54,7 +57,7 @@ export default async function labelByKeyword(
       app.log.info(`Keyword '${keyword}' found, keywordIgnoreCase = '${keywordIgnoreCase}', adding label '${label}'`);
       app.log.info(`Updating issue: ${owner}/${repo}/${issue_number}`);
       try {
-        await octokit.rest.issues.addLabels({
+        await context.octokit.rest.issues.addLabels({
           owner,
           repo,
           issue_number,

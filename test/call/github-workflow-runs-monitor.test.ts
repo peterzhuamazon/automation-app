@@ -60,6 +60,9 @@ describe('githubWorkflowRunsMonitor', () => {
           login: 'org',
         },
       },
+      octokit: {
+        graphql: jest.fn(),
+      }
     };
     resource = {
       organizations: new Map([

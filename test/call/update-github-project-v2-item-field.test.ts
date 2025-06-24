@@ -106,7 +106,7 @@ describe('updateGithubProjectV2ItemFieldFunctions', () => {
     it('should print error and return null if it is not a issues.labeled event', async () => {
       context.payload.label = undefined;
 
-      const result = await updateGithubProjectV2ItemField(app, context, resource, params);
+      const result = await updateGithubProjectV2ItemField(app, context, context.octokit, resource, params);
 
       expect(app.log.error).toHaveBeenCalledWith("Only 'issues.labeled' event is supported on this call.");
       expect(result).toBe(null);
@@ -115,7 +115,7 @@ describe('updateGithubProjectV2ItemFieldFunctions', () => {
     it('should print error and return null if itemId is not present', async () => {
       params.itemId = '';
 
-      const result = await updateGithubProjectV2ItemField(app, context, resource, params);
+      const result = await updateGithubProjectV2ItemField(app, context, context.octokit, resource, params);
 
       expect(app.log.error).toHaveBeenCalledWith('No Item Node Id provided in parameter.');
       expect(result).toBe(null);
@@ -124,7 +124,7 @@ describe('updateGithubProjectV2ItemFieldFunctions', () => {
     it("should print error and return null if method is not 'label'", async () => {
       params.method = 'otherMethod';
 
-      const result = await updateGithubProjectV2ItemField(app, context, resource, params);
+      const result = await updateGithubProjectV2ItemField(app, context, context.octokit, resource, params);
 
       expect(app.log.error).toHaveBeenCalledWith("Only 'label' method is supported in this call at the moment.");
       expect(result).toBe(null);
@@ -133,7 +133,7 @@ describe('updateGithubProjectV2ItemFieldFunctions', () => {
     it("should print error and return null if label does not match '<FieldName>:<Field>'", async () => {
       context.payload.label.name = 'Enhancement';
 
-      const result = await updateGithubProjectV2ItemField(app, context, resource, params);
+      const result = await updateGithubProjectV2ItemField(app, context, context.octokit, resource, params);
 
       expect(app.log.error).toHaveBeenCalledWith("Label 'Enhancement' is invalid. Please make sure your label is formatted as '<FieldName>:<FieldValue>'.");
       expect(result).toBe(null);
@@ -142,7 +142,7 @@ describe('updateGithubProjectV2ItemFieldFunctions', () => {
     it('should print error and return null if field does not exist or field value / type not found', async () => {
       context.payload.label.name = 'Release:Access';
 
-      const result = await updateGithubProjectV2ItemField(app, context, resource, params);
+      const result = await updateGithubProjectV2ItemField(app, context, context.octokit, resource, params);
 
       expect(app.log.error).toHaveBeenCalledWith(
         "Either 'test-org/222' / 'Release' not exist, or 'Release' has an unsupported field type (currently support: SINGLE_SELECT)",
@@ -153,7 +153,7 @@ describe('updateGithubProjectV2ItemFieldFunctions', () => {
     it('should print error and return null if graphql failed the call', async () => {
       context.octokit.graphql.mockRejectedValue(new Error('GraphQL request failed'));
 
-      const result = await updateGithubProjectV2ItemField(app, context, resource, params);
+      const result = await updateGithubProjectV2ItemField(app, context, context.octokit, resource, params);
 
       expect(app.log.error).toHaveBeenCalledWith('ERROR: Error: GraphQL request failed');
       expect(result).toBe(null);
@@ -166,7 +166,7 @@ describe('updateGithubProjectV2ItemFieldFunctions', () => {
 
       context.octokit.graphql.mockResolvedValue(graphQLResponse);
 
-      const result = await updateGithubProjectV2ItemField(app, context, resource, params);
+      const result = await updateGithubProjectV2ItemField(app, context, context.octokit, resource, params);
 
       /* prettier-ignore-start */
       const graphQLCallStack = `
